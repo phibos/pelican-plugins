@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+Gallery plugin
+==============
+
+Create gallery pages and embed galleries into articles and pages.
+
+See README.md for more information.
+"""
+
 import os
 import logging
 logger = logging.getLogger(__name__)
