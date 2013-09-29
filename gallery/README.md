@@ -1,5 +1,5 @@
 Gallery
-==================
+=======
 
 * Allows an article to contain an album of pictures.
 * All albums can also be syndicated into a central gallery page.
@@ -7,9 +7,9 @@ Gallery
 ##How to Use
 
 1. Group images into folders, with each folder representing an album.
-2. Place all album folders within a folder named gallery, which resides within the images folder.
+2. Place all album folders within a folder named gallery, which resides within the content folder.
 
-		./content/images/gallery/album_name
+		./content/gallery/album_name
 	
 ###Articles
 
@@ -40,23 +40,60 @@ The dictionary key is the name of the album and the lists contain the filenames.
 
 ###article.html
 
+	{% if article.gallery %}
 	<h2><a href="{{ SITEURL }}/pages/gallery.html#{{ article.album }}">{{ article.album }}</a></h2>
-	    <ul>
-		{% for image in article.galleryimages %}
-		<li><a class="{{ article.album }} cboxElement" href="{{ SITEURL }}/static/images/gallery/{{ article.album }}/{{ image }}"><img src="{{ SITEURL }}/static/images/gallery200x200/{{ article.album }}/{{ image }}"></a></li>
+	<ul>
+		{{ article.gallery }}
+		{% for filename, image in article.gallery.images|dictsort %}
+		<li>
+			<a class="{{ article.gallery.name }} cboxElement" href="{{ SITEURL }}/images/gallery/{{ article.gallery.name }}/{{ image }}">
+				<img src="{{ SITEURL }}/images/gallery/{{ article.gallery.name }}/{{ image.thumbnail }}" />
+			</a>
+		</li>
 		{% endfor %}
-	    </ul>
+	</ul>
+	{% endif %}
+
+
+**Legacy:** Support will be removed in the near future
+
+	<h2><a href="{{ SITEURL }}/pages/gallery.html#{{ article.album }}">{{ article.album }}</a></h2>
+	<ul>
+		{% for image in article.galleryimages %}
+		<li>
+			<a class="{{ article.album }} cboxElement" href="{{ SITEURL }}/static/images/gallery/{{ article.album }}/{{ image }}">
+				<img src="{{ SITEURL }}/images/gallery/{{ article.album }}/{{ image }}" />
+			</a>
+		</li>
+		{% endfor %}
+	</ul>
 		
 ###gallery.html
 
-	{% for album, images in page.gallery.iteritems() %}
-	<h2><a name="{{ album }}">{{ album }}</a></h2>
+	{% for name, gallery in page.album|dictsort %}
+	<h2><a name="{{ name }}">{{ name }}</a></h2>
 	<ul>
-	    {% for image in images %}
-	    <li><a class="{{ album }} cboxElement" href="{{ SITEURL }}/static/images/gallery/{{album}}/{{ image }}" title="{{ image }}"><img src="{{ SITEURL }}/static/images/gallery200x200/{{album}}/{{ image }}"></a></li>
-	    {% endfor %}
+		{% for filename, image in gallery.images|dictsort %}
+		<li>
+			<a class="{{ album }} cboxElement" href="{{ SITEURL }}/images/gallery/{{ gallery.name }}/{{ image }}" title="{{ image }}">
+				<img src="{{ SITEURL }}/images/gallery/{{ gallery.name }}/{{ image.thumbnail }}">
+			</a>
+		</li>
+		{% endfor %}
 	</ul>
 	{% endfor %}
+
+###gallery-embedded.html
+
+	<ul>
+		{% for filename, image in gallery['images']|dictsort %}
+		<li>
+			<a class="gallery-{{ gallery.name }}" href="{{ SITEURL }}/images/gallery/{{ gallery.name }}/{{ image.filename }}">
+				<img src="{{ SITEURL }}/images/gallery/{{ gallery.name }}/{{ image.thumbnail }}" />
+			</a>
+		</li>
+		{% endfor %}
+	</ul>
 
 ###posts/foo.md
 
