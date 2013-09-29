@@ -158,7 +158,6 @@ def get_gallery(name, params={}):
         'images': images
     }
 
-
 def generator_init(generator_obj):
     """
     We need a generator object to load templates and access the pelican
@@ -170,52 +169,51 @@ def generator_init(generator_obj):
         return
     generator = generator_obj
 
-def add_gallery_post(generator):
-
-    contentpath = generator.settings.get('PATH')    
-    gallerycontentpath = os.path.join(contentpath,'images/gallery')
-    
-    
+def add_gallery_article(generator):
+    """
+    If a gallery is specified in the metadata of an article than add it
+    """
     for article in generator.articles:
-        if 'gallery' in article.metadata.keys():
-            album = article.metadata.get('gallery')
-            galleryimages = []
-            
-            articlegallerypath=os.path.join(gallerycontentpath, album)
-            
-            if(os.path.isdir(articlegallerypath)):       
-                for i in os.listdir(articlegallerypath):
-                    if os.path.isfile(os.path.join(os.path.join(gallerycontentpath, album), i)):
-                        galleryimages.append(i)
-        
-            article.album=album
-            article.galleryimages=galleryimages
+        if 'gallery' not in article.metadata.keys():
+            continue
 
+        gallery_name = article.metadata.get('gallery')
+        gallery = get_gallery(gallery_name)
 
+        article.gallery = gallery
+        # backward compatibility
+        article.album = gallery['name']
+        article.galleryimages = gallery['images']
 
 def generate_gallery_page(generator):
+    """
+    Create a dict with all available galleries and append it to a page
+    """
+    settings = prepare_settings()
 
-    contentpath = generator.settings.get('PATH')    
-    gallerycontentpath = os.path.join(contentpath,'images/gallery')
-    
-    
+    content_path = os.path.join(
+        generator.settings.get('PATH'),
+        settings.get('content_path')
+    )
+
     for page in generator.pages:
-        if page.metadata.get('template') == 'gallery':
-            gallery=dict()
-        
-            for a in os.listdir(gallerycontentpath):
-                if os.path.isdir(os.path.join(gallerycontentpath, a)):
-                   
-                    for i in os.listdir(os.path.join(gallerycontentpath, a)):
-                        if os.path.isfile(os.path.join(os.path.join(gallerycontentpath, a), i)):
-                            gallery.setdefault(a, []).append(i)
-        
-            page.gallery=gallery
+        if page.metadata.get('template') != 'gallery':
+            continue
 
+        album = {}
+        for name in os.listdir(content_path):
+            if not os.path.isdir(os.path.join(content_path, name)):
+                continue
 
+            ret = get_gallery(name)
+            if ret == None:
+                continue
+            album[name] = ret
+
+        page.album = album
 
 def register():
-    signals.article_generator_finalized.connect(add_gallery_post)
+    signals.article_generator_finalized.connect(add_gallery_article)
     signals.page_generator_finalized.connect(generate_gallery_page)
     signals.generator_init.connect(generator_init)
     directives.register_directive('gallery', GalleryRst)
